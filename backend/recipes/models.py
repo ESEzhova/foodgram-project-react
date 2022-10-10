@@ -1,5 +1,5 @@
 from colorfield.fields import ColorField
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from users.models import CustomUser
@@ -42,7 +42,7 @@ class Recipe(models.Model):
         Ingredient,
         through='IngredientRecipe'
     )
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveIntegerField(
         validators=[
             MinValueValidator(1)
         ]
@@ -79,7 +79,7 @@ class IngredientRecipe(models.Model):
         on_delete=models.CASCADE,
         related_name='ingredient_recipe',
     )
-    amount = models.IntegerField(
+    amount = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
     )

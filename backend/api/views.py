@@ -1,5 +1,3 @@
-from http import HTTPStatus
-
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_list_or_404, get_object_or_404
@@ -41,7 +39,7 @@ class FollowViewSet(viewsets.ModelViewSet):
         user_id = self.kwargs.get('users_id')
         user = get_object_or_404(CustomUser, id=user_id)
         Follow.objects.create(user=request.user, following=user)
-        return Response(HTTPStatus.CREATED)
+        return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         author_id = self.kwargs['users_id']
@@ -89,14 +87,10 @@ class FavoriteShoppingCartViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        if self.model.objects.filter(user=request.user,
-                                     recipe=recipe).exists():
-            return Response({
-                'errors': 'Рецепт уже добавлен в список'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        self.model.objects.create(user=request.user, recipe=recipe)
-        return Response(HTTPStatus.CREATED)
-
+        if serializer.is_valid(raise_exception=True):
+            self.model.objects.create(user=request.user, recipe=recipe)
+        return Response(status=status.HTTP_201_CREATED)
+        
     def delete(self, request, *args, **kwargs):
         recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id
