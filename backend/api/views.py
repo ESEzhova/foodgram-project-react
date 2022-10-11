@@ -87,7 +87,11 @@ class FavoriteShoppingCartViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        serializer_class.is_valid(raise_exception=True)
+        if self.model.objects.filter(user=request.user,
+                                     recipe=recipe).exists():
+            return Response({
+                'errors': 'Рецепт уже добавлен в список'
+            }, status=status.HTTP_400_BAD_REQUEST)
         self.model.objects.create(user=request.user, recipe=recipe)
         return Response(status=status.HTTP_201_CREATED)
 

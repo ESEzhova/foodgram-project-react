@@ -123,34 +123,12 @@ class FavoriteSerializer(serializers.Serializer):
     cooking_time = serializers.IntegerField()
     image = Base64ImageField(max_length=None, use_url=False)
 
-    def validate(self, data):
-        recipe = self.context['recipe'].kwargs.get('recipes_id')
-        author = self.context['recipe'].request.user
-        if (
-            Favorite.objects.filter(user=author, recipe=recipe).exists()
-            and self.context['recipe'].request.method == 'POST'
-        ):
-            raise serializers.ValidationError(
-                'Рецепт уже добавлен в список!')
-        return data
-
 
 class ShoppingCartSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     cooking_time = serializers.IntegerField()
     image = Base64ImageField(max_length=None, use_url=False,)
-
-    def validate(self, data):
-        recipe = self.context['recipe'].kwargs.get('recipes_id')
-        author = self.context['recipe'].request.user
-        if (
-            ShoppingCart.objects.filter(user=author, recipe=recipe).exists()
-            and self.context['recipe'].request.method == 'POST'
-        ):
-            raise serializers.ValidationError(
-                'Рецепт уже добавлен в список!')
-        return data
 
 
 class RecipeSerializer(serializers.ModelSerializer,
