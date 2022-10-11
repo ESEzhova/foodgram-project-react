@@ -6,8 +6,8 @@ from users.models import CustomUser
 
 
 class Ingredient(models.Model):
-    name = models.CharField(unique=True, max_length=30)
-    measurement_unit = models.CharField(max_length=15)
+    name = models.CharField(unique=True, max_length=200)
+    measurement_unit = models.CharField(max_length=64)
 
     class Meta:
         constraints = [
