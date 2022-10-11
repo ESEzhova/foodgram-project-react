@@ -235,7 +235,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
                     amount=ingredient['amount'],
                 )
             )
-        return IngredientRecipe.objects.bulk_create(ingredients_list)
+        IngredientRecipe.objects.bulk_create(ingredients_list)
 
     def create_tags(self, tags, recipe):
         for tag in tags:
