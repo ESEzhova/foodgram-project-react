@@ -1,69 +1,158 @@
-from django.contrib import admin
+from colorfield.fields import ColorField
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
-from .models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                     ShoppingCart, Follow, Tag, TagRecipe)
-
-
-class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
-    search_fields = ('name', )
-    empty_value_display = '-пусто-'
-    list_filter = ('name',)
+from users.models import CustomUser
 
 
-class TagAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
-    list_filter = ('name',)
-    list_display = ('name', 'color', 'slug')
-    empty_value_display = '-пусто-'
-    search_fields = ('name', )
+class Ingredient(models.Model):
+    name = models.CharField(unique=True, max_length=30)
+    measurement_unit = models.CharField(max_length=15)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'measurement_unit'],
+                                    name='unique_name_measurement_unit')
+        ]
+
+    def __str__(self):
+        return self.name
 
 
-class IngredientRecipeInline(admin.TabularInline):
-    model = IngredientRecipe
-    extra = 0
+class Tag(models.Model):
+    name = models.CharField(unique=True, max_length=256)
+    color = ColorField(default='#FF0000', format='hex')
+    slug = models.SlugField(unique=True, max_length=200)
+
+    def __str__(self):
+        return self.slug
 
 
-class TagRecipeInline(admin.TabularInline):
-    model = TagRecipe
-    extra = 0
+class Recipe(models.Model):
+    author = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='recipes'
+    )
+    name = models.CharField(max_length=256)
+    image = models.ImageField(upload_to='recipes/image/')
+    text = models.TextField()
+    tags = models.ManyToManyField(Tag, through='TagRecipe')
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through='IngredientRecipe'
+    )
+    cooking_time = models.IntegerField(
+        validators=[
+            MinValueValidator(1)
+        ]
+    )
+
+    class Meta:
+        ordering = ('-id', )
+
+    def __str__(self):
+        return self.name
 
 
-class RecipeAdmin(admin.ModelAdmin):
-    inlines = (IngredientRecipeInline, TagRecipeInline,)
-    list_display = ('name', 'author', 'cooking_time', 'id', 'count_favorite')
-    empty_value_display = '-пусто-'
-    list_filter = ('name', 'author', 'tags')
+class ShoppingCart(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
-    def count_favorite(self, obj):
-        return Favorite.objects.filter(recipe=obj).count()
-    count_favorite.short_description = 'Число добавлении в избранное'
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_shoppingcart'
+            )
+        ]
 
-
-class ShoppingCartAdmin(admin.ModelAdmin):
-    list_filter = ('recipe',)
-    list_display = ('user', 'recipe')
-    empty_value_display = '-пусто-'
-    search_fields = ('recipe', )
-
-
-class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
-    search_fields = ('user', )
-    empty_value_display = '-пусто-'
-    list_filter = ('user',)
+    def __str__(self):
+        return f'{self.user} {self.recipe}'
 
 
-class FollowAdmin(admin.ModelAdmin):
-    list_display = ('user', 'following')
-    search_fields = ('user', )
-    list_filter = ('user',)
-    empty_value_display = '-пусто-'
+class IngredientRecipe(models.Model):
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='ingredient_recipe',
+    )
+    amount = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+    )
+
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique_ingredient_recipe'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.ingredient} {self.recipe}'
 
 
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(ShoppingCart, ShoppingCartAdmin)
-admin.site.register(Favorite, FavoriteAdmin)
-admin.site.register(Follow, FollowAdmin)
+class TagRecipe(models.Model):
+    tags = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tags', 'recipe'],
+                name='unique_tag_recipe'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.tags} {self.recipe}'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_favorite'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.recipe} {self.user}'
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='follower',
+    )
+    following = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='following',
+    )
+
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'],
+                name='unique_user_following'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user}'
