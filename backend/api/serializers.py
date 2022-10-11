@@ -1,5 +1,3 @@
-import sys
-
 from django.shortcuts import get_object_or_404
 from django.core.validators import RegexValidator
 from djoser.serializers import UserCreateSerializer
