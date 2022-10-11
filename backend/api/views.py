@@ -87,10 +87,10 @@ class FavoriteShoppingCartViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        serializer.is_valid(raise_exception=True)
+        serializer_class.is_valid(raise_exception=True)
         self.model.objects.create(user=request.user, recipe=recipe)
         return Response(status=status.HTTP_201_CREATED)
-        
+
     def delete(self, request, *args, **kwargs):
         recipe_id = self.kwargs['recipes_id']
         user_id = request.user.id

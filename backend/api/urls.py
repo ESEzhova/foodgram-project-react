@@ -24,7 +24,7 @@ urlpatterns = [
          ShoppingCartInList.as_view({'get': 'download'}), name='download'),
     path('users/<int:users_id>/subscribe/',
          FollowViewSet.as_view({'post': 'create',
-                                   'delete': 'delete'}), name='subscribe'),
+                                'delete': 'delete'}), name='subscribe'),
     path('recipes/<int:recipes_id>/favorite/',
          FavoriteViewSet.as_view({'post': 'create',
                                   'delete': 'delete'}), name='favorite'),

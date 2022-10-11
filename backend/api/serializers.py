@@ -1,5 +1,3 @@
-import sys
-
 from django.shortcuts import get_object_or_404
 from django.core.validators import RegexValidator
 from djoser.serializers import UserCreateSerializer
@@ -19,7 +17,7 @@ class IsFollow(metaclass=serializers.SerializerMetaclass):
         if request.user.is_anonymous:
             return False
         return Follow.objects.filter(user=request.user,
-                                        following__id=obj.id).exists()
+                                     following__id=obj.id).exists()
 
 
 class IsFavorite(metaclass=serializers.SerializerMetaclass):
@@ -135,7 +133,6 @@ class FavoriteSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Рецепт уже добавлен в список!')
         return data
-
 
 
 class ShoppingCartSerializer(serializers.Serializer):
@@ -277,7 +274,6 @@ class SubscriptionSerializer(serializers.ModelSerializer, IsFollow):
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_subscribed', 'recipes', 'recipes_count')
-
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author__id=obj.id).count()
